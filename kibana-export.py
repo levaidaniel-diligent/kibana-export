@@ -4,10 +4,10 @@ import sys
 import getopt
 
 def usage():
-    print(f"{sys.argv[0]} -o|--output <file> -k|--key <API key> -e|--env <prod|nonprod>")
+    print(f"{sys.argv[0]} -o|--output <file> -k|--key <API key> -e|--env <prod|nonprod> -t|--type <object type> [-r]")
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], 'ho:k:e:', ['help', 'output=', 'key=', 'env='])
+    opts, args = getopt.getopt(sys.argv[1:], 'ho:k:e:t:r', ['help', 'output=', 'key=', 'env=', 'type='])
 except getopt.GetoptError as err:
     print(f"{err}")
     usage()
@@ -16,14 +16,20 @@ except getopt.GetoptError as err:
 output = None
 api_key = None
 env = None
+object_type = None
+include_refs = False
 
 for opt, arg in opts:
-    if opt in ("-o", "--output"):
+    if opt in ('-o', '--output'):
         output = arg
-    elif opt in ("-k", "--key"):
+    elif opt in ('-k', '--key'):
         api_key = arg
-    elif opt in ("-e", "--env"):
+    elif opt in ('-e', '--env'):
         env = arg
+    elif opt in ('-t', '--type'):
+        object_type = arg
+    elif opt == '-r':
+        include_refs = True
     elif opt in ("-h", "--help"):
         usage()
         sys.exit()
@@ -48,6 +54,9 @@ if not output:
     print("Please specify output file with '-o'!")
     sys.exit(1)
 
+if not object_type:
+    print("Please specify the object type to export '-t'!")
+    sys.exit(1)
 
 protocol = 'https'
 
@@ -100,8 +109,8 @@ data = {}
 #    data.append({ 'type': 'dashboard', 'id': dashboard })   # <- the query essentially
 #data['objects'] = []
 #data['objects'].append({ 'type': 'dashboard' })
-data['type'] = 'dashboard'
-#data['includeReferencesDeep'] = 'true'
+data['type'] = object_type
+data['includeReferencesDeep'] = 'true' if include_refs else 'false'
 #print(f"(bulk)data='{data}'")
 
 print("Retrieving dashboards...")
@@ -111,7 +120,7 @@ dashes = ndjson.loads(ret.text)
 print("Retrieved dashboards:")
 for obj in dashes:
     #print(f"obj='{obj}'")
-    if 'type' in obj  and  obj['type'] == 'dashboard':
+    if 'type' in obj  and  obj['type'] == object_type:
         print(f"\t(bulk)title: {obj['attributes']['title']}")
 
 print("Saving dashboards...")
