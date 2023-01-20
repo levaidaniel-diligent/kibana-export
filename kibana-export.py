@@ -113,17 +113,17 @@ data['type'] = object_type
 data['includeReferencesDeep'] = 'true' if include_refs else 'false'
 #print(f"(bulk)data='{data}'")
 
-print("Retrieving dashboards...")
+print(f"Retrieving {object_type} objects...")
 ret = requests.post(f"{protocol}://{host}/{api_paths['dashboard_export']}", json=data, headers=headers)
 ret.raise_for_status()
 dashes = ndjson.loads(ret.text)
-print("Retrieved dashboards:")
+print(f"Retrieved {object_type} objects:")
 for obj in dashes:
     #print(f"obj='{obj}'")
     if 'type' in obj  and  obj['type'] == object_type:
         print(f"\t(bulk)title: {obj['attributes']['title']}")
 
-print("Saving dashboards...")
+print(f"Saving {object_type} objects...")
 with open(f"./{output}", 'w') as output:
     output.write(ret.text)
 
